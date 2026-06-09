@@ -1,0 +1,190 @@
+src/liquidity_stress/scenario_config.py:59:    path = Path(path)
+src/liquidity_stress/config.py:17:PROJECT_ROOT = Path(__file__).resolve().parents[2]
+src/liquidity_stress/config.py:19:DATA_DIR = PROJECT_ROOT / "data"
+src/liquidity_stress/config.py:20:INPUT_DIR = DATA_DIR / "input"
+src/liquidity_stress/config.py:22:OUTPUT_DIR = PROJECT_ROOT / "outputs"
+src/liquidity_stress/config.py:23:OUTPUTS_DIR = OUTPUT_DIR
+src/liquidity_stress/config.py:25:TABLES_DIR = OUTPUT_DIR / "tables"
+src/liquidity_stress/config.py:26:CHARTS_DIR = OUTPUT_DIR / "charts"
+src/liquidity_stress/config.py:28:BANKING_INPUT_PATH = INPUT_DIR / "banking_input.xlsx"
+src/liquidity_stress/config.py:29:INTERBANK_EXPOSURE_MATRIX_PATH = INPUT_DIR / "interbank_exposure_matrix.xlsx"
+src/liquidity_stress/data_loader.py:33:        self.input_path = Path(input_path)
+src/liquidity_stress/synthetic_data_generator.py:96:        self.output_path = Path(output_path)
+src/liquidity_stress/network_interbank.py:207:    path = Path(path)
+src/liquidity_stress/network_interbank.py:232:    path = Path(path)
+src/liquidity_stress/network_interbank.py:272:    path = Path(path)
+scripts/30_run_sensitivity.py:18:    PYTHONPATH=src python scripts/30_run_sensitivity.py
+scripts/30_run_sensitivity.py:37:    TABLES_DIR,
+scripts/30_run_sensitivity.py:46:PROJECT_ROOT = Path(__file__).resolve().parents[1]
+scripts/30_run_sensitivity.py:47:ENGINE_PATH = PROJECT_ROOT / "scripts" / "10_run_base_engine.py"
+scripts/30_run_sensitivity.py:48:SCENARIO_CONFIG_PATH = PROJECT_ROOT / "configs" / "scenario_base.yaml"
+scripts/30_run_sensitivity.py:820:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/30_run_sensitivity.py:969:        TABLES_DIR / "sensitivity_summary.csv",
+scripts/30_run_sensitivity.py:974:        TABLES_DIR / "sensitivity_monthly_summary.csv",
+scripts/30_run_sensitivity.py:979:        TABLES_DIR / "sensitivity_bank_summary.csv",
+scripts/30_run_sensitivity.py:984:        TABLES_DIR / "sensitivity_network_summary.csv",
+scripts/30_run_sensitivity.py:989:        TABLES_DIR / "sensitivity_market_summary.csv",
+scripts/30_run_sensitivity.py:994:        TABLES_DIR / "sensitivity_lolr_diagnostics.csv",
+scripts/99_run_all.py:17:    PYTHONPATH=src python scripts/99_run_all.py
+scripts/99_run_all.py:28:PROJECT_ROOT = Path(__file__).resolve().parents[1]
+scripts/99_run_all.py:32:    "scripts/00_generate_input.py",
+scripts/99_run_all.py:33:    "scripts/01_validate_baseline.py",
+scripts/99_run_all.py:34:    "scripts/10_run_base_engine.py",
+scripts/99_run_all.py:35:    "scripts/20_run_currency_engine.py",
+scripts/99_run_all.py:36:    "scripts/30_run_sensitivity.py",
+scripts/99_run_all.py:37:    "scripts/40_run_monte_carlo.py",
+scripts/99_run_all.py:38:    "scripts/50_plot_indirect_contagion_network.py",
+scripts/99_run_all.py:39:    "scripts/51_plot_direct_interbank_network.py",
+scripts/99_run_all.py:40:    "scripts/60_make_charts.py",
+scripts/99_run_all.py:52:        cwd=PROJECT_ROOT,
+scripts/50_plot_indirect_contagion_network.py:10:    PYTHONPATH=src python scripts/50_plot_indirect_contagion_network.py
+scripts/50_plot_indirect_contagion_network.py:30:PROJECT_ROOT = Path(__file__).resolve().parents[1]
+scripts/50_plot_indirect_contagion_network.py:31:FIGURES_DIR = PROJECT_ROOT / "outputs" / "charts"
+scripts/50_plot_indirect_contagion_network.py:32:TABLES_DIR = PROJECT_ROOT / "outputs" / "tables"
+scripts/50_plot_indirect_contagion_network.py:83:    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/50_plot_indirect_contagion_network.py:84:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/50_plot_indirect_contagion_network.py:92:    omega.to_csv(TABLES_DIR / "indirect_contagion_overlap_matrix.csv")
+scripts/50_plot_indirect_contagion_network.py:93:    edges.to_csv(TABLES_DIR / "indirect_contagion_edge_table.csv", index=False)
+scripts/50_plot_indirect_contagion_network.py:94:    nodes.to_csv(TABLES_DIR / "indirect_contagion_node_table.csv", index=False)
+scripts/50_plot_indirect_contagion_network.py:259:    output_path = FIGURES_DIR / "indirect_contagion_network_armenia.png"
+scripts/50_plot_indirect_contagion_network.py:265:    print(TABLES_DIR / "indirect_contagion_overlap_matrix.csv")
+scripts/50_plot_indirect_contagion_network.py:266:    print(TABLES_DIR / "indirect_contagion_edge_table.csv")
+scripts/50_plot_indirect_contagion_network.py:267:    print(TABLES_DIR / "indirect_contagion_node_table.csv")
+scripts/01_validate_baseline.py:9:    PYTHONPATH=src python scripts/01_validate_baseline.py
+scripts/01_validate_baseline.py:16:    TABLES_DIR,
+scripts/01_validate_baseline.py:26:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/01_validate_baseline.py:66:    banks.to_csv(TABLES_DIR / "baseline_banks.csv", index=False)
+scripts/01_validate_baseline.py:67:    banks_amd.to_csv(TABLES_DIR / "baseline_banks_amd.csv", index=False)
+scripts/01_validate_baseline.py:68:    banks_fx.to_csv(TABLES_DIR / "baseline_banks_fx.csv", index=False)
+scripts/01_validate_baseline.py:69:    checks.to_csv(TABLES_DIR / "baseline_sanity_checks.csv", index=False)
+scripts/40_run_monte_carlo.py:20:    PYTHONPATH=src python scripts/40_run_monte_carlo.py
+scripts/40_run_monte_carlo.py:42:    TABLES_DIR,
+scripts/40_run_monte_carlo.py:54:PROJECT_ROOT = Path(__file__).resolve().parents[1]
+scripts/40_run_monte_carlo.py:55:SCENARIO_CONFIG_PATH = PROJECT_ROOT / "configs" / "scenario_base.yaml"
+scripts/40_run_monte_carlo.py:132:    Load scripts/10_run_base_engine.py as a module.
+scripts/40_run_monte_carlo.py:137:    engine_path = PROJECT_ROOT / "scripts" / "10_run_base_engine.py"
+scripts/40_run_monte_carlo.py:955:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/40_run_monte_carlo.py:1084:        TABLES_DIR / "monte_carlo_shock_run_summary.csv",
+scripts/40_run_monte_carlo.py:1089:        TABLES_DIR / "monte_carlo_shock_monthly_summary.csv",
+scripts/40_run_monte_carlo.py:1094:        TABLES_DIR / "monte_carlo_shock_bank_summary.csv",
+scripts/40_run_monte_carlo.py:1099:        TABLES_DIR / "monte_carlo_shock_quantile_summary.csv",
+scripts/40_run_monte_carlo.py:1104:        TABLES_DIR / "monte_carlo_shock_bank_risk_ranking.csv",
+scripts/40_run_monte_carlo.py:1109:        TABLES_DIR / "monte_carlo_shock_risk_probability_summary.csv",
+scripts/60_make_charts.py:21:    PYTHONPATH=src python scripts/60_make_charts.py
+scripts/60_make_charts.py:44:PROJECT_ROOT = Path(__file__).resolve().parents[1] if "__file__" in globals() else Path.cwd()
+scripts/60_make_charts.py:47:    PROJECT_ROOT,
+scripts/60_make_charts.py:48:    PROJECT_ROOT / "outputs",
+scripts/60_make_charts.py:49:    PROJECT_ROOT / "output",
+scripts/60_make_charts.py:50:    PROJECT_ROOT / "results",
+scripts/60_make_charts.py:51:    PROJECT_ROOT / "result",
+scripts/60_make_charts.py:52:    PROJECT_ROOT / "artifacts",
+scripts/60_make_charts.py:53:    PROJECT_ROOT / "reports",
+scripts/60_make_charts.py:54:    PROJECT_ROOT / "data",
+scripts/60_make_charts.py:55:    PROJECT_ROOT / "data" / "outputs",
+scripts/60_make_charts.py:56:    PROJECT_ROOT / "data" / "results",
+scripts/60_make_charts.py:59:CHART_DIR = PROJECT_ROOT / "outputs" / "charts"
+scripts/60_make_charts.py:213:    log(f"saved {path.relative_to(PROJECT_ROOT)}")
+scripts/60_make_charts.py:556:    log(f"using {label}: {path.relative_to(PROJECT_ROOT)} score={score}, shape={df.shape}")
+scripts/60_make_charts.py:575:                log(f"using {p.relative_to(PROJECT_ROOT)}")
+scripts/60_make_charts.py:587:                log(f"using {p.relative_to(PROJECT_ROOT)}")
+scripts/60_make_charts.py:2300:    log(f"using currency chart data: {path.relative_to(PROJECT_ROOT)} score={score}")
+scripts/60_make_charts.py:2552:    Uses outputs/tables/sensitivity_monthly_summary.csv produced by
+scripts/60_make_charts.py:2553:    scripts/30_run_sensitivity.py.
+scripts/20_run_currency_engine.py:11:    PYTHONPATH=src python scripts/20_run_currency_engine.py
+scripts/20_run_currency_engine.py:28:    TABLES_DIR,
+scripts/20_run_currency_engine.py:46:PROJECT_ROOT = Path(__file__).resolve().parents[1]
+scripts/20_run_currency_engine.py:47:SCENARIO_CONFIG_PATH = PROJECT_ROOT / "configs" / "scenario_base.yaml"
+scripts/20_run_currency_engine.py:48:ENGINE_SCRIPT_PATH = PROJECT_ROOT / "scripts" / "10_run_base_engine.py"
+scripts/20_run_currency_engine.py:53:    Import run_dynamic_interbank_contagion_path from scripts/10_run_base_engine.py.
+scripts/20_run_currency_engine.py:73:    base_path = Path(INTERBANK_EXPOSURE_CONFIG["path"])
+scripts/20_run_currency_engine.py:552:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/20_run_currency_engine.py:629:        TABLES_DIR / "currency_interbank_contagion_bank_results.csv",
+scripts/20_run_currency_engine.py:634:        TABLES_DIR / "currency_interbank_contagion_monthly_summary.csv",
+scripts/20_run_currency_engine.py:639:        TABLES_DIR / "currency_interbank_contagion_worst_case_bank_summary.csv",
+scripts/20_run_currency_engine.py:645:            TABLES_DIR / "currency_interbank_contagion_market_summary.csv",
+scripts/20_run_currency_engine.py:651:            TABLES_DIR / "currency_interbank_contagion_network_summary.csv",
+scripts/diagnostics/02_run_first_round_only.py:10:    PYTHONPATH=src python scripts/diagnostics/02_run_first_round_only.py
+scripts/diagnostics/02_run_first_round_only.py:22:    TABLES_DIR,
+scripts/diagnostics/02_run_first_round_only.py:32:PROJECT_ROOT = Path(__file__).resolve().parents[2]
+scripts/diagnostics/02_run_first_round_only.py:33:SCENARIO_CONFIG_PATH = PROJECT_ROOT / "configs" / "scenario_base.yaml"
+scripts/diagnostics/02_run_first_round_only.py:105:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/diagnostics/02_run_first_round_only.py:141:        TABLES_DIR / "first_round_monthly_bank_results.csv",
+scripts/diagnostics/02_run_first_round_only.py:146:        TABLES_DIR / "first_round_monthly_summary.csv",
+scripts/diagnostics/02_run_first_round_only.py:151:        TABLES_DIR / "first_round_worst_case_by_bank.csv",
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:7:    PYTHONPATH=src python scripts/10_run_base_engine.py
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:13:    PYTHONPATH=src python scripts/diagnostics/06_run_fire_sales_old_sequence.py
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:26:    TABLES_DIR,
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:456:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:483:        TABLES_DIR / "fire_sale_bank_results.csv",
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:488:        TABLES_DIR / "fire_sale_monthly_summary.csv",
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:493:        TABLES_DIR / "fire_sale_worst_case_by_bank.csv",
+scripts/diagnostics/06_run_fire_sales_old_sequence.py:498:        TABLES_DIR / "fire_sale_market_summary.csv",
+scripts/diagnostics/04_run_bank_reaction_only.py:10:    PYTHONPATH=src python scripts/diagnostics/04_run_bank_reaction_only.py
+scripts/diagnostics/04_run_bank_reaction_only.py:22:    TABLES_DIR,
+scripts/diagnostics/04_run_bank_reaction_only.py:350:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/diagnostics/04_run_bank_reaction_only.py:375:        TABLES_DIR / "asset_sale_reaction_bank_results.csv",
+scripts/diagnostics/04_run_bank_reaction_only.py:380:        TABLES_DIR / "asset_sale_reaction_monthly_summary.csv",
+scripts/diagnostics/04_run_bank_reaction_only.py:385:        TABLES_DIR / "asset_sale_reaction_worst_case_by_bank.csv",
+scripts/diagnostics/05_run_policy_support_old_sequence.py:7:    PYTHONPATH=src python scripts/10_run_base_engine.py
+scripts/diagnostics/05_run_policy_support_old_sequence.py:13:    PYTHONPATH=src python scripts/diagnostics/05_run_policy_support_old_sequence.py
+scripts/diagnostics/05_run_policy_support_old_sequence.py:25:    TABLES_DIR,
+scripts/diagnostics/05_run_policy_support_old_sequence.py:360:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/diagnostics/05_run_policy_support_old_sequence.py:385:        TABLES_DIR / "policy_support_bank_results.csv",
+scripts/diagnostics/05_run_policy_support_old_sequence.py:390:        TABLES_DIR / "policy_support_monthly_summary.csv",
+scripts/diagnostics/05_run_policy_support_old_sequence.py:395:        TABLES_DIR / "policy_support_worst_case_by_bank.csv",
+scripts/diagnostics/03_run_first_round_currency_only.py:9:    PYTHONPATH=src python scripts/diagnostics/03_run_first_round_currency_only.py
+scripts/diagnostics/03_run_first_round_currency_only.py:20:    TABLES_DIR,
+scripts/diagnostics/03_run_first_round_currency_only.py:30:PROJECT_ROOT = Path(__file__).resolve().parents[2]
+scripts/diagnostics/03_run_first_round_currency_only.py:31:SCENARIO_CONFIG_PATH = PROJECT_ROOT / "configs" / "scenario_base.yaml"
+scripts/diagnostics/03_run_first_round_currency_only.py:155:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/diagnostics/03_run_first_round_currency_only.py:197:        TABLES_DIR / "first_round_currency_bank_results.csv",
+scripts/diagnostics/03_run_first_round_currency_only.py:202:        TABLES_DIR / "first_round_currency_monthly_summary.csv",
+scripts/51_plot_direct_interbank_network.py:10:    PYTHONPATH=src python scripts/51_plot_direct_interbank_network.py
+scripts/51_plot_direct_interbank_network.py:33:PROJECT_ROOT = Path(__file__).resolve().parents[1]
+scripts/51_plot_direct_interbank_network.py:34:FIGURES_DIR = PROJECT_ROOT / "outputs" / "charts"
+scripts/51_plot_direct_interbank_network.py:35:TABLES_DIR = PROJECT_ROOT / "outputs" / "tables"
+scripts/51_plot_direct_interbank_network.py:82:    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/51_plot_direct_interbank_network.py:83:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/51_plot_direct_interbank_network.py:105:    exposure_matrix.to_csv(TABLES_DIR / "direct_interbank_exposure_matrix.csv")
+scripts/51_plot_direct_interbank_network.py:106:    edges.to_csv(TABLES_DIR / "direct_interbank_edge_table.csv", index=False)
+scripts/51_plot_direct_interbank_network.py:107:    nodes.to_csv(TABLES_DIR / "direct_interbank_node_table.csv", index=False)
+scripts/51_plot_direct_interbank_network.py:280:    output_path = FIGURES_DIR / "direct_interbank_network_armenia.png"
+scripts/51_plot_direct_interbank_network.py:286:    print(TABLES_DIR / "direct_interbank_exposure_matrix.csv")
+scripts/51_plot_direct_interbank_network.py:287:    print(TABLES_DIR / "direct_interbank_edge_table.csv")
+scripts/51_plot_direct_interbank_network.py:288:    print(TABLES_DIR / "direct_interbank_node_table.csv")
+scripts/10_run_base_engine.py:13:    PYTHONPATH=src python scripts/10_run_base_engine.py
+scripts/10_run_base_engine.py:31:    TABLES_DIR,
+scripts/10_run_base_engine.py:967:    TABLES_DIR.mkdir(parents=True, exist_ok=True)
+scripts/10_run_base_engine.py:1015:        TABLES_DIR / "interbank_contagion_bank_results.csv",
+scripts/10_run_base_engine.py:1020:        TABLES_DIR / "interbank_contagion_monthly_summary.csv",
+scripts/10_run_base_engine.py:1025:        TABLES_DIR / "interbank_contagion_worst_case_by_bank.csv",
+scripts/10_run_base_engine.py:1030:        TABLES_DIR / "interbank_contagion_market_summary.csv",
+scripts/10_run_base_engine.py:1035:        TABLES_DIR / "interbank_contagion_network_summary.csv",
+scripts/00_generate_input.py:13:    PYTHONPATH=src python scripts/00_generate_input.py
+README.md:24:scripts/10_run_base_engine.py
+README.md:49:├── outputs/
+README.md:54:├── scripts/
+README.md:98:PYTHONPATH=src python scripts/99_run_all.py
+README.md:120:PYTHONPATH=src python scripts/00_generate_input.py
+README.md:121:PYTHONPATH=src python scripts/01_validate_baseline.py
+README.md:122:PYTHONPATH=src python scripts/10_run_base_engine.py
+README.md:123:PYTHONPATH=src python scripts/20_run_currency_engine.py
+README.md:124:PYTHONPATH=src python scripts/30_run_sensitivity.py
+README.md:125:PYTHONPATH=src python scripts/40_run_monte_carlo.py
+README.md:126:PYTHONPATH=src python scripts/50_plot_indirect_contagion_network.py
+README.md:127:PYTHONPATH=src python scripts/51_plot_direct_interbank_network.py
+README.md:128:PYTHONPATH=src python scripts/60_make_charts.py
+README.md:146:Diagnostic scripts are stored in `scripts/diagnostics/`. They isolate intermediate modules and are not the canonical final engine.
+README.md:168:outputs/tables/
+README.md:169:outputs/charts/
+README.md:170:outputs/figures/
+README.md:176:outputs/tables/interbank_contagion_bank_results.csv
+README.md:177:outputs/tables/interbank_contagion_monthly_summary.csv
+README.md:178:outputs/tables/interbank_contagion_worst_case_by_bank.csv
+README.md:179:outputs/tables/interbank_contagion_market_summary.csv
+README.md:180:outputs/tables/interbank_contagion_network_summary.csv
+README.md:186:outputs/charts/01_base_lcr_path.png
+README.md:187:outputs/charts/08_loss_decomposition_by_month.png
+README.md:188:outputs/charts/09_bank_distress_breach_counts.png
+README.md:199:checks = pd.read_csv("outputs/tables/baseline_sanity_checks.csv")
+README.md:219:df = pd.read_csv("outputs/tables/interbank_contagion_monthly_summary.csv")

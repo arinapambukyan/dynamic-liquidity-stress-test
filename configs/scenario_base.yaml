@@ -1,0 +1,73 @@
+scenario_name: baseline_6_month_stress
+
+time:
+  horizon_months: 6
+  frequency: monthly
+
+stress:
+  mode: full_systemic
+
+currency:
+  currency_mode: combined
+  run_currency_sheets: true
+
+severity:
+  # Smooth dynamic stress path:
+  # buildup -> peak -> partial stabilization
+  alpha_path: [0.15, 0.25, 0.40, 0.55, 0.45, 0.30]
+
+  alpha_path_amd: [0.12, 0.22, 0.35, 0.50, 0.40, 0.25]
+  alpha_path_fx:  [0.20, 0.30, 0.50, 0.65, 0.55, 0.35]
+
+modules:
+  first_round: true
+  bank_reaction: true
+  policy_intervention: true
+  fire_sales: true
+  interbank_contagion: true
+
+thresholds:
+  # Armenia baseline regulatory LCR requirement.
+  lcr_minimum: 1.20
+
+  # Banks react when the active LCR measure falls below the current requirement.
+  reaction_lcr_trigger: 1.20
+
+  # Reaction target follows the active policy requirement.
+  # Do not use baseline_lcr because it can push banks toward unrealistically high starting LCRs.
+  reaction_target_mode: trigger
+  reaction_target_cap: 1.20
+
+policy_intervention:
+  enabled: true
+
+  # Use collateral cap for realism.
+  support_mode: collateral_capped
+
+  # LoLR principle: solvent but illiquid banks only.
+  support_only_solvent_illiquid: true
+  solvency_equity_threshold: 0.0
+
+  # Support cash shortfalls.
+  illiquidity_cash_shortfall_enabled: true
+
+  # Also allow support when the bank has no cash shortfall
+  # but falls below the active LCR requirement.
+  illiquidity_lcr_threshold: 1.20
+  support_lcr_gap: true
+  lcr_support_target: 1.20
+
+  # Monitor HQLA/assets, but do not force CBA support from this ratio.
+  illiquidity_hqla_assets_threshold: 0.10
+  support_hqla_assets_gap: false
+  hqla_assets_support_target: 0.10
+
+  eligible_collateral:
+    - government_securities
+    - bank_securities
+    - corporate_securities
+
+  collateral_haircuts:
+    government_securities: 0.05
+    bank_securities: 0.15
+    corporate_securities: 0.25

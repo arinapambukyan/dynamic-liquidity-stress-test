@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Temporary/editor files
+*.tmp
+*.bak
+*.save
+*~
+
+# Temporary backups
+old_outputs_backup/
+backups_before_fix/
+fixed_tmp/
+
+# Generated caches
+.pytest_cache/
+.mypy_cache/
