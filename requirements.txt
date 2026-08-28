@@ -3,3 +3,4 @@ pandas
 matplotlib
 openpyxl
 pyyaml
+Jinja2>=3.1

@@ -1,4 +1,4 @@
-scenario_name: baseline_6_month_stress
+scenario_name: cba_2020_liquidity_outflow
 
 time:
   horizon_months: 6
@@ -12,12 +12,14 @@ currency:
   run_currency_sheets: true
 
 severity:
-  # Smooth dynamic stress path:
-  # buildup -> peak -> partial stabilization
-  alpha_path: [0.15, 0.25, 0.40, 0.55, 0.45, 0.30]
+  # CBA-style 6-month liquidity stress:
+  # severe outflows in months 1-2, modest continuation in months 3-6.
+  alpha_path: [1.00, 1.00, 0.25, 0.25, 0.25, 0.25]
 
-  alpha_path_amd: [0.12, 0.22, 0.35, 0.50, 0.40, 0.25]
-  alpha_path_fx:  [0.20, 0.30, 0.50, 0.65, 0.55, 0.35]
+  # Currency-specific version of the same timing logic.
+  # FX is kept slightly more severe/persistent than AMD.
+  alpha_path_amd: [0.90, 0.90, 0.20, 0.20, 0.20, 0.20]
+  alpha_path_fx:  [1.00, 1.00, 0.30, 0.30, 0.30, 0.30]
 
 modules:
   first_round: true
@@ -27,38 +29,29 @@ modules:
   interbank_contagion: true
 
 thresholds:
-  # Armenia baseline regulatory LCR requirement.
   lcr_minimum: 1.20
-
-  # Banks react when the active LCR measure falls below the current requirement.
   reaction_lcr_trigger: 1.20
-
-  # Reaction target follows the active policy requirement.
-  # Do not use baseline_lcr because it can push banks toward unrealistically high starting LCRs.
   reaction_target_mode: trigger
   reaction_target_cap: 1.20
 
 policy_intervention:
   enabled: true
-
-  # Use collateral cap for realism.
   support_mode: collateral_capped
 
   # LoLR principle: solvent but illiquid banks only.
   support_only_solvent_illiquid: true
   solvency_equity_threshold: 0.0
 
-  # Support cash shortfalls.
+  # Support actual unpaid cash outflows.
   illiquidity_cash_shortfall_enabled: true
 
-  # Also allow support when the bank has no cash shortfall
-  # but falls below the active LCR requirement.
+  # Also allow support for LCR-buffer repair.
   illiquidity_lcr_threshold: 1.20
   support_lcr_gap: true
   lcr_support_target: 1.20
 
-  # Monitor HQLA/assets, but do not force CBA support from this ratio.
-  illiquidity_hqla_assets_threshold: 0.10
+  # HQLA/assets is diagnostic only in the benchmark.
+  illiquidity_hqla_assets_threshold: null
   support_hqla_assets_gap: false
   hqla_assets_support_target: 0.10
 
@@ -71,3 +64,34 @@ policy_intervention:
     government_securities: 0.05
     bank_securities: 0.15
     corporate_securities: 0.25
+
+fire_sales:
+  enabled: true
+
+  # Conservative public implementation: price-mediated contagion
+  # only through government securities.
+  asset_columns:
+    - government_securities
+
+  reference_sale_fraction: 0.05
+  price_impact_at_reference_sale_fraction:
+    government_securities: 0.02
+
+  minimum_market_price: 0.01
+
+  market_depth_multiplier_by_asset:
+    government_securities: 1.0
+
+  # Off in the benchmark. Used only in asset-purchase counterfactuals.
+  central_bank_asset_purchases:
+    enabled: false
+    purchase_share_of_bank_sales:
+      government_securities: 0.50
+
+interbank_contagion:
+  enabled: true
+  loss_given_default: 0.60
+  max_contagion_rounds: 5
+  network_exposure_scale: 1.00
+  liquidity_resolution_floor: 1.00
+  collateral_exhaustion_tol: 1.0e-6

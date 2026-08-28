@@ -1,7 +1,0 @@
-government_securities_quantity_sold,government_securities_market_quantity_before_sale,government_securities_fraction_sold,government_securities_cb_purchase_share,government_securities_cb_purchase_quantity,government_securities_cb_purchase_fraction,government_securities_effective_fraction_sold_after_cb,government_securities_price_before,government_securities_price_after,government_securities_incremental_price_drop,government_securities_system_mtm_loss,total_system_fire_sale_mtm_loss,stress_month,alpha
-0.0,1847095.9047966565,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,1,0.15
-0.0,1833242.6855106815,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,2,0.25
-0.0,1811243.7732845536,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,3,0.4
-0.0,1781358.2510253582,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,4,0.55
-0.0,1757309.914636516,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,5,0.45
-0.0,1741494.1254047875,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0,6,0.3

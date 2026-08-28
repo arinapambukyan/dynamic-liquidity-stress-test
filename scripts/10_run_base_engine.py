@@ -622,17 +622,24 @@ def run_dynamic_interbank_contagion_path(
                     | newly_terminal_fire_sale
             )
 
-            # Live network: row/col sums track current interbank_assets/liabilities.
-            live_exposure_matrix = build_synthetic_interbank_exposure_matrix(
-                banks=with_fire_sales[
-                    ["bank_id", "interbank_assets", "interbank_liabilities"]
-                ],
+            # Paper-grade direct network:
+            # Keep the baseline synthetic interbank exposure matrix fixed across
+            # the stress horizon. Direct interbank claims are contractual exposures;
+            # losses reduce creditor interbank assets inside apply_interbank_contagion,
+            # but the gravity/IPF network is not re-estimated after every monthly shock.
+            active_ids = with_fire_sales["bank_id"].astype(str).tolist()
+            fixed_exposure_matrix = (
+                exposure_matrix.copy()
+                .rename(index=str, columns=str)
+                .reindex(index=active_ids, columns=active_ids)
+                .fillna(0.0)
             )
+
             with_interbank, contagion_summary = apply_interbank_contagion(
                 banks=with_fire_sales,
                 contagion_config=interbank_contagion_config,
                 lcr_assumptions=lcr_assumptions,
-                exposure_matrix=live_exposure_matrix,
+                exposure_matrix=fixed_exposure_matrix,
             )
 
             with_interbank = refresh_liquidity_metrics(

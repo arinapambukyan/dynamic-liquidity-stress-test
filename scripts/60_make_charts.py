@@ -36,6 +36,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 
+# =============================================================================
+# Paper typography scaling
+# =============================================================================
+# LaTeX shrinks figures inside subfigures, so chart text must be larger
+# inside the exported image itself. Change FONT_SCALE only if needed:
+#   1.40 = moderate
+#   1.60 = good for side-by-side paper figures
+#   1.80 = very large / presentation-like
+FONT_SCALE = 1.60
+MIN_FONT_SIZE = 12.0
+
+from matplotlib.text import Text as _MplText
+
+if not getattr(_MplText, "_paper_font_scaling_applied", False):
+    _ORIG_SET_FONTSIZE = _MplText.set_fontsize
+
+    def _paper_scaled_set_fontsize(self, size):
+        if isinstance(size, (int, float, np.integer, np.floating)):
+            size = max(float(size) * FONT_SCALE, MIN_FONT_SIZE)
+        return _ORIG_SET_FONTSIZE(self, size)
+
+    _MplText.set_fontsize = _paper_scaled_set_fontsize
+    _MplText._paper_font_scaling_applied = True
+
+
 
 # =============================================================================
 # Configuration
@@ -59,7 +84,7 @@ SEARCH_DIRS = [
 CHART_DIR = PROJECT_ROOT / "outputs" / "charts"
 CHART_DIR.mkdir(parents=True, exist_ok=True)
 
-DPI = 220
+DPI = 300
 FIGSIZE_WIDE = (14.5, 8.0)
 FIGSIZE_MEDIUM = (12.5, 7.0)
 FIGSIZE_TALL = (13.5, 10.0)
@@ -209,6 +234,7 @@ def savefig(fig: plt.Figure, filename: str) -> None:
     path = CHART_DIR / filename
     fig.tight_layout()
     fig.savefig(path, dpi=DPI, bbox_inches="tight")
+    fig.savefig(path.with_suffix(".pdf"), bbox_inches="tight")
     plt.close(fig)
     log(f"saved {path.relative_to(PROJECT_ROOT)}")
 
@@ -473,6 +499,223 @@ def one_row_per_month(df: pd.DataFrame) -> pd.DataFrame:
     out = out.sort_values("stress_month").copy()
 
     return out
+
+
+# =============================================================================
+# Baseline t=0 helpers for path charts
+# =============================================================================
+
+def _first_stress_month_slice(df: pd.DataFrame) -> pd.DataFrame:
+    """Return one row per bank from the earliest stress month."""
+    out = one_row_per_bank_month(df.copy())
+    month = get_month_col(out)
+    if month is None or "bank_name" not in out.columns:
+        return out.iloc[0:0].copy()
+    m0 = pd.to_numeric(out[month], errors="coerce").min()
+    out = out.loc[pd.to_numeric(out[month], errors="coerce") == m0].copy()
+    out = _collapse_duplicate_keys(out, ["bank_name"])
+    return out
+
+
+def _first_existing_nonnull(df: pd.DataFrame, candidates: Sequence[str]) -> Optional[str]:
+    for c in candidates:
+        if c in df.columns and pd.to_numeric(df[c], errors="coerce").notna().any():
+            return c
+    return None
+
+
+def baseline_lcr_col(df: pd.DataFrame) -> Optional[str]:
+    return _first_existing_nonnull(
+        df,
+        [
+            "pre_shock_LCR",
+            "baseline_LCR",
+            "starting_LCR",
+            "initial_LCR",
+            "pre_stress_LCR",
+            "LCR",
+        ],
+    )
+
+
+def baseline_hqla_assets_col(df: pd.DataFrame) -> Optional[str]:
+    return _first_existing_nonnull(
+        df,
+        [
+            "pre_shock_HQLA_assets_ratio",
+            "baseline_HQLA_assets_ratio",
+            "starting_HQLA_assets_ratio",
+            "initial_HQLA_assets_ratio",
+            "HQLA_assets_ratio",
+            "post_interbank_HQLA_assets_ratio",
+        ],
+    )
+
+
+def baseline_hqla_col(df: pd.DataFrame) -> Optional[str]:
+    return _first_existing_nonnull(
+        df,
+        [
+            "pre_shock_HQLA",
+            "baseline_HQLA",
+            "starting_HQLA",
+            "initial_HQLA",
+            "HQLA",
+        ],
+    )
+
+
+def baseline_ncof_col(df: pd.DataFrame) -> Optional[str]:
+    return _first_existing_nonnull(
+        df,
+        [
+            "pre_shock_NCOF",
+            "baseline_NCOF",
+            "starting_NCOF",
+            "initial_NCOF",
+            "NCOF",
+        ],
+    )
+
+
+def baseline_assets_col(df: pd.DataFrame) -> Optional[str]:
+    return _first_existing_nonnull(
+        df,
+        [
+            "pre_shock_total_assets",
+            "baseline_total_assets",
+            "starting_total_assets",
+            "initial_total_assets",
+            "total_assets",
+            "assets",
+        ],
+    )
+
+
+def add_baseline_row_to_monthly_lcr(
+    monthly: pd.DataFrame,
+    bank_monthly: Optional[pd.DataFrame],
+    system_col: str,
+    weakest_col: str,
+) -> pd.DataFrame:
+    """Prepend stress_month=0 baseline LCR row to a monthly path."""
+    if bank_monthly is None:
+        return monthly
+    b0 = _first_stress_month_slice(bank_monthly)
+    if b0.empty:
+        return monthly
+
+    lcr0 = baseline_lcr_col(b0)
+    hqla0 = baseline_hqla_col(b0)
+    ncof0 = baseline_ncof_col(b0)
+
+    row = {c: np.nan for c in monthly.columns}
+    row["stress_month"] = 0
+
+    if hqla0 and ncof0 and pd.to_numeric(b0[ncof0], errors="coerce").sum() > 0:
+        row[system_col] = (
+            pd.to_numeric(b0[hqla0], errors="coerce").sum()
+            / pd.to_numeric(b0[ncof0], errors="coerce").sum()
+        )
+    elif lcr0:
+        row[system_col] = pd.to_numeric(b0[lcr0], errors="coerce").mean()
+
+    if lcr0:
+        row[weakest_col] = pd.to_numeric(b0[lcr0], errors="coerce").min()
+
+    out = monthly.loc[monthly["stress_month"] != 0].copy()
+    out = pd.concat([pd.DataFrame([row]), out], ignore_index=True)
+    return out.sort_values("stress_month")
+
+
+def add_baseline_row_to_monthly_hqla_assets(
+    monthly: pd.DataFrame,
+    bank_monthly: Optional[pd.DataFrame],
+    system_col: str,
+    weakest_col: str,
+) -> pd.DataFrame:
+    """Prepend stress_month=0 baseline HQLA/assets row to a monthly path."""
+    if bank_monthly is None:
+        return monthly
+    b0 = _first_stress_month_slice(bank_monthly)
+    if b0.empty:
+        return monthly
+
+    ratio0 = baseline_hqla_assets_col(b0)
+    hqla0 = baseline_hqla_col(b0)
+    assets0 = baseline_assets_col(b0)
+
+    row = {c: np.nan for c in monthly.columns}
+    row["stress_month"] = 0
+
+    if hqla0 and assets0 and pd.to_numeric(b0[assets0], errors="coerce").sum() > 0:
+        row[system_col] = (
+            pd.to_numeric(b0[hqla0], errors="coerce").sum()
+            / pd.to_numeric(b0[assets0], errors="coerce").sum()
+        )
+    elif ratio0:
+        row[system_col] = pd.to_numeric(b0[ratio0], errors="coerce").mean()
+
+    if ratio0:
+        row[weakest_col] = pd.to_numeric(b0[ratio0], errors="coerce").min()
+
+    out = monthly.loc[monthly["stress_month"] != 0].copy()
+    out = pd.concat([pd.DataFrame([row]), out], ignore_index=True)
+    return out.sort_values("stress_month")
+
+
+def add_baseline_bank_rows(
+    df: pd.DataFrame,
+    value_col: str,
+    baseline_value_col: Optional[str],
+    path_col: str,
+    supporting_cols: Optional[dict[str, str]] = None,
+) -> pd.DataFrame:
+    """
+    Add one t=0 row per bank for path charts.
+
+    value_col is the stress-period column. baseline_value_col is the baseline
+    column from the earliest stress month. supporting_cols maps stress-period
+    columns to baseline columns so system-weighted aggregates can be computed.
+    """
+    out = one_row_per_bank_month(df.copy())
+    month = get_month_col(out)
+    bank = get_bank_col(out)
+    if month is None or bank is None:
+        return out
+
+    out[path_col] = out[value_col]
+
+    if baseline_value_col is None or baseline_value_col not in out.columns:
+        return out
+
+    base = _first_stress_month_slice(out)
+    if base.empty:
+        return out
+
+    base = base.copy()
+    base[month] = 0
+    base[path_col] = base[baseline_value_col]
+
+    # Baseline rows represent the pre-stress stock state, not current-period flows.
+    # Flow/loss/support diagnostics must therefore be zero at t=0.
+    for c in base.columns:
+        cl = str(c).lower()
+        if any(token in cl for token in [
+            "support", "shortfall", "loss", "proceeds", "gap",
+            "outflow", "inflow", "need", "asset_sale", "fire_sale", "pledged", "contagion"
+        ]):
+            if pd.api.types.is_numeric_dtype(base[c]):
+                base[c] = 0.0
+
+    if supporting_cols:
+        for stress_col, base_col in supporting_cols.items():
+            if stress_col in base.columns and base_col in base.columns:
+                base[stress_col] = base[base_col]
+
+    combined = pd.concat([base, out.loc[out[month] != 0].copy()], ignore_index=True)
+    combined = _collapse_duplicate_keys(combined, [bank, month])
+    return combined.sort_values([bank, month])
 
 # =============================================================================
 # Data discovery
@@ -1255,6 +1498,9 @@ def chart_01_base_lcr_path(
         log("SKIP 01: missing stressed system LCR or stressed weakest-bank LCR")
         return
 
+    # Add t=0 baseline so the path starts from the pre-stress state.
+    df = add_baseline_row_to_monthly_lcr(df, bank_monthly, system_col, weakest_col)
+
     threshold = get_active_lcr_threshold(monthly=df, bank_monthly=bank_monthly)
 
     plot_system_path_chart(
@@ -1262,11 +1508,11 @@ def chart_01_base_lcr_path(
         x_col="stress_month",
         system_col=system_col,
         weakest_col=weakest_col,
-        title="Base Scenario: Stressed LCR Path Before Mitigation",
-        ylabel="Stressed LCR",
+        title="First-Round LCR Path: Baseline and Stressed Months",
+        ylabel="LCR",
         filename="01_base_lcr_path.png",
-        system_label="System stressed LCR = aggregate stressed HQLA / stressed NCOF",
-        weakest_label="Weakest-bank stressed LCR",
+        system_label="System first-round LCR = aggregate stressed HQLA / stressed NCOF",
+        weakest_label="Weakest-bank first-round LCR",
         threshold=threshold,
         threshold_label=f"Regulatory threshold = {threshold:.1f}",
         pct_axis=False,
@@ -1308,12 +1554,15 @@ def chart_01b_base_hqla_assets_path(
         log("SKIP 01b: missing HQLA/assets columns")
         return
 
+    # Add t=0 baseline so the path starts from the pre-stress liquidity stock.
+    df = add_baseline_row_to_monthly_hqla_assets(df, bank_monthly, system_col, weakest_col)
+
     plot_system_path_chart(
         df=df,
         x_col="stress_month",
         system_col=system_col,
         weakest_col=weakest_col,
-        title="Base Scenario: HQLA / Assets Path After Full Transmission",
+        title="HQLA / Assets Path: Baseline and Full-Transmission Months",
         ylabel="HQLA / total assets",
         filename="01b_base_hqla_assets_path.png",
         system_label="System HQLA / assets = aggregate HQLA / aggregate assets",
@@ -1342,7 +1591,20 @@ def chart_01c_all_bank_lcr_lines(bank_monthly: Optional[pd.DataFrame]) -> None:
     hqla_col = first_existing(df, ["post_interbank_HQLA", "HQLA"])
     ncof_col = first_existing(df, ["post_interbank_NCOF", "NCOF"])
 
-    piv = pivot_bank_month(df, lcr, sort_by_min=False)
+    # Plot a true path: t=0 baseline plus final post-transmission months.
+    lcr_path_col = "__path_LCR"
+    df = add_baseline_bank_rows(
+        df,
+        value_col=lcr,
+        baseline_value_col=baseline_lcr_col(df),
+        path_col=lcr_path_col,
+        supporting_cols={
+            hqla_col: baseline_hqla_col(df) if hqla_col else None,
+            ncof_col: baseline_ncof_col(df) if ncof_col else None,
+        } if hqla_col and ncof_col else None,
+    )
+
+    piv = pivot_bank_month(df, lcr_path_col, sort_by_min=False)
 
     system = None
     if hqla_col is not None and ncof_col is not None:
@@ -1354,7 +1616,7 @@ def chart_01c_all_bank_lcr_lines(bank_monthly: Optional[pd.DataFrame]) -> None:
         )
 
     simple_avg = (
-        df.groupby(month)[lcr]
+        df.groupby(month)[lcr_path_col]
         .mean()
         .reset_index(name="simple_average_LCR")
         .sort_values(month)
@@ -1365,7 +1627,7 @@ def chart_01c_all_bank_lcr_lines(bank_monthly: Optional[pd.DataFrame]) -> None:
     fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
     setup_ax(
         ax,
-        "All-bank LCR Paths After Full Transmission",
+        "All-bank LCR Paths: Baseline and Final Post-Transmission Months",
         "Stress month",
         "LCR",
     )
@@ -1431,7 +1693,20 @@ def chart_01d_all_bank_hqla_assets_lines(bank_monthly: Optional[pd.DataFrame]) -
     hqla_col = first_existing(df, ["post_interbank_HQLA", "HQLA"])
     assets_col = first_existing(df, ["total_assets", "final_total_assets", "assets"])
 
-    piv = pivot_bank_month(df, ratio, sort_by_min=False)
+    # Plot a true path: t=0 baseline plus final post-transmission months.
+    ratio_path_col = "__path_HQLA_assets_ratio"
+    df = add_baseline_bank_rows(
+        df,
+        value_col=ratio,
+        baseline_value_col=baseline_hqla_assets_col(df),
+        path_col=ratio_path_col,
+        supporting_cols={
+            hqla_col: baseline_hqla_col(df) if hqla_col else None,
+            assets_col: baseline_assets_col(df) if assets_col else None,
+        } if hqla_col and assets_col else None,
+    )
+
+    piv = pivot_bank_month(df, ratio_path_col, sort_by_min=False)
 
     system = None
     if hqla_col is not None and assets_col is not None:
@@ -1443,7 +1718,7 @@ def chart_01d_all_bank_hqla_assets_lines(bank_monthly: Optional[pd.DataFrame]) -
         )
 
     simple_avg = (
-        df.groupby(month)[ratio]
+        df.groupby(month)[ratio_path_col]
         .mean()
         .reset_index(name="simple_average_HQLA_assets_ratio")
         .sort_values(month)
@@ -1452,7 +1727,7 @@ def chart_01d_all_bank_hqla_assets_lines(bank_monthly: Optional[pd.DataFrame]) -
     fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
     setup_ax(
         ax,
-        "All-bank HQLA / Assets Paths After Full Transmission",
+        "All-bank HQLA / Assets Paths: Baseline and Final Months",
         "Stress month",
         "HQLA / total assets",
     )
@@ -1544,9 +1819,15 @@ def chart_02_lcr_heatmap(bank_monthly: Optional[pd.DataFrame]) -> None:
     if lcr is None:
         log("SKIP 02: no LCR column")
         return
-    piv = pivot_bank_month(bank_monthly, lcr, sort_by_min=True)
+    df = add_baseline_bank_rows(
+        bank_monthly,
+        value_col=lcr,
+        baseline_value_col=baseline_lcr_col(bank_monthly),
+        path_col="__path_LCR",
+    )
+    piv = pivot_bank_month(df, "__path_LCR", sort_by_min=True)
     fig, ax = plt.subplots(figsize=FIGSIZE_TALL)
-    heatmap(ax, piv, "Bank-level LCR Heatmap: Timing and Concentration of Stress", "Final post-transmission LCR", vmin=0.0, vmax=max(1.4, np.nanpercentile(piv.values, 95)), cmap="RdYlBu")
+    heatmap(ax, piv, "Bank-level LCR Heatmap: Baseline and Stress Horizon", "Final post-transmission LCR", vmin=0.0, vmax=max(1.4, np.nanpercentile(piv.values, 95)), cmap="RdYlBu")
     ax.axvline(-0.5, color="none")
     savefig(fig, "02_bank_level_lcr_heatmap.png")
 
@@ -1560,9 +1841,15 @@ def chart_03_hqla_assets_heatmap(bank_monthly: Optional[pd.DataFrame]) -> None:
     if ratio is None:
         log("SKIP 03: no HQLA/assets column")
         return
-    piv = pivot_bank_month(df, ratio, sort_by_min=True)
+    df = add_baseline_bank_rows(
+        df,
+        value_col=ratio,
+        baseline_value_col=baseline_hqla_assets_col(df),
+        path_col="__path_HQLA_assets_ratio",
+    )
+    piv = pivot_bank_month(df, "__path_HQLA_assets_ratio", sort_by_min=True)
     fig, ax = plt.subplots(figsize=FIGSIZE_TALL)
-    heatmap(ax, piv, "Liquidity-stock Erosion: HQLA / Assets by Bank and Month", "HQLA / total assets", vmin=0.0, vmax=max(0.35, np.nanpercentile(piv.values, 95)), cmap="YlGnBu")
+    heatmap(ax, piv, "Liquidity-stock Erosion: Baseline and Stress Horizon", "HQLA / total assets", vmin=0.0, vmax=max(0.35, np.nanpercentile(piv.values, 95)), cmap="YlGnBu")
     savefig(fig, "03_bank_level_hqla_assets_heatmap.png")
 
 
@@ -1625,16 +1912,23 @@ def chart_04_bank_lcr_small_multiples(bank_monthly: Optional[pd.DataFrame]) -> N
     if lcr is None:
         log("SKIP 04: no LCR column")
         return
-    vals = pd.to_numeric(bank_monthly[lcr], errors="coerce")
-    upper = min(max(1.35, float(np.nanpercentile(vals, 95)) + 0.1), max(2.0, float(np.nanmax(vals)) + 0.05))
-    small_multiples_paths(
+    df = add_baseline_bank_rows(
         bank_monthly,
-        lcr,
+        value_col=lcr,
+        baseline_value_col=baseline_lcr_col(bank_monthly),
+        path_col="__path_LCR",
+    )
+    vals = pd.to_numeric(df["__path_LCR"], errors="coerce")
+    upper = min(max(1.35, float(np.nanpercentile(vals, 95)) + 0.1), max(2.0, float(np.nanmax(vals)) + 0.05))
+    threshold = get_active_lcr_threshold(bank_monthly=bank_monthly)
+    small_multiples_paths(
+        df,
+        "__path_LCR",
         "04_bank_lcr_small_multiples.png",
-        "How Each Bank's LCR Evolves Across the Stress Horizon",
+        "How Each Bank's LCR Evolves from Baseline Through the Stress Horizon",
         "Final post-transmission LCR",
-        threshold=1.2,
-        threshold_label="LCR threshold = 1.2",
+        threshold=threshold,
+        threshold_label=f"LCR threshold = {threshold:.1f}",
         ylim=(0, upper),
     )
 
@@ -1648,13 +1942,19 @@ def chart_05_bank_hqla_assets_small_multiples(bank_monthly: Optional[pd.DataFram
     if ratio is None:
         log("SKIP 05: no HQLA/assets column")
         return
-    vals = pd.to_numeric(df[ratio], errors="coerce")
+    df = add_baseline_bank_rows(
+        df,
+        value_col=ratio,
+        baseline_value_col=baseline_hqla_assets_col(df),
+        path_col="__path_HQLA_assets_ratio",
+    )
+    vals = pd.to_numeric(df["__path_HQLA_assets_ratio"], errors="coerce")
     upper = min(max(0.20, float(np.nanpercentile(vals, 95)) + 0.03), max(0.40, float(np.nanmax(vals)) + 0.02))
     small_multiples_paths(
         df,
-        ratio,
+        "__path_HQLA_assets_ratio",
         "05_bank_hqla_assets_small_multiples.png",
-        "How Each Bank's HQLA / Assets Ratio Moves Under Stress",
+        "How Each Bank's HQLA / Assets Ratio Moves from Baseline Through Stress",
         "HQLA / total assets",
         threshold=None,
         ylim=(0, upper),
@@ -1866,11 +2166,12 @@ def chart_09_breach_counts(bank_monthly: Optional[pd.DataFrame]) -> None:
         log("SKIP 09: missing month/LCR")
         return
     tmp = df.copy()
-    tmp["lcr_lt_120"] = tmp[lcr] < 1.20
+    threshold = get_active_lcr_threshold(bank_monthly=df)
+    tmp["lcr_lt_active"] = tmp[lcr] < threshold
     tmp["lcr_lt_100"] = tmp[lcr] < 1.00
 
     aggs = {
-        "Banks with LCR < 1.20": ("lcr_lt_120", "sum"),
+        f"Banks with LCR < {threshold:.2f}": ("lcr_lt_active", "sum"),
         "Banks with LCR < 1.00": ("lcr_lt_100", "sum"),
     }
     if ratio is not None:
@@ -1899,11 +2200,18 @@ def chart_10_lcr_distribution(bank_monthly: Optional[pd.DataFrame]) -> None:
     if month is None or lcr is None:
         log("SKIP 10: missing month/LCR")
         return
-    q = df.groupby(month)[lcr].quantile([0.05, 0.25, 0.50, 0.75, 0.95]).unstack().reset_index()
+    df = add_baseline_bank_rows(
+        df,
+        value_col=lcr,
+        baseline_value_col=baseline_lcr_col(df),
+        path_col="__path_LCR",
+    )
+    q = df.groupby(month)["__path_LCR"].quantile([0.05, 0.25, 0.50, 0.75, 0.95]).unstack().reset_index()
     q = q.rename(columns={month: "stress_month", 0.05: "p05", 0.25: "p25", 0.50: "p50", 0.75: "p75", 0.95: "p95"})
+    threshold = get_active_lcr_threshold(bank_monthly=bank_monthly)
     fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
-    setup_ax(ax, "Cross-bank LCR Distribution Through Time", "Stress month", "Final post-transmission LCR")
-    ax.axhline(1.2, color=BURGUNDY, linestyle="--", linewidth=1.8, label="LCR threshold = 1.2")
+    setup_ax(ax, "Cross-bank LCR Distribution: Baseline and Stress Horizon", "Stress month", "Final post-transmission LCR")
+    ax.axhline(threshold, color=BURGUNDY, linestyle="--", linewidth=1.8, label=f"LCR threshold = {threshold:.1f}")
     ax.fill_between(q["stress_month"], q["p05"], q["p95"], color=LIGHT_BLUE, alpha=0.25, label="p05 to p95 range")
     ax.fill_between(q["stress_month"], q["p25"], q["p75"], color=LIGHT_BLUE, alpha=0.45, label="p25 to p75 range")
     ax.plot(q["stress_month"], q["p50"], marker="o", linewidth=3, color=BLUE, label="Median bank LCR")
@@ -1923,10 +2231,16 @@ def chart_11_hqla_assets_distribution(bank_monthly: Optional[pd.DataFrame]) -> N
     if month is None or ratio is None:
         log("SKIP 11: missing month/HQLA assets")
         return
-    q = df.groupby(month)[ratio].quantile([0.05, 0.25, 0.50, 0.75, 0.95]).unstack().reset_index()
+    df = add_baseline_bank_rows(
+        df,
+        value_col=ratio,
+        baseline_value_col=baseline_hqla_assets_col(df),
+        path_col="__path_HQLA_assets_ratio",
+    )
+    q = df.groupby(month)["__path_HQLA_assets_ratio"].quantile([0.05, 0.25, 0.50, 0.75, 0.95]).unstack().reset_index()
     q = q.rename(columns={month: "stress_month", 0.05: "p05", 0.25: "p25", 0.50: "p50", 0.75: "p75", 0.95: "p95"})
     fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
-    setup_ax(ax, "Cross-bank HQLA / Assets Distribution Through Time", "Stress month", "HQLA / total assets")
+    setup_ax(ax, "Cross-bank HQLA / Assets Distribution: Baseline and Stress Horizon", "Stress month", "HQLA / total assets")
     ax.fill_between(q["stress_month"], q["p05"], q["p95"], color=LIGHT_BLUE, alpha=0.25, label="p05 to p95 range")
     ax.fill_between(q["stress_month"], q["p25"], q["p75"], color=LIGHT_BLUE, alpha=0.45, label="p25 to p75 range")
     ax.plot(q["stress_month"], q["p50"], marker="o", linewidth=3, color=BLUE, label="Median bank")
@@ -2378,6 +2692,12 @@ def chart_selected_bank_mechanism(bank_monthly: Optional[pd.DataFrame]) -> None:
 
     for b in selected:
         sub = df[df[bank] == b].copy()
+        sub = add_baseline_bank_rows(
+            sub,
+            value_col=post_interbank,
+            baseline_value_col=baseline_lcr_col(sub),
+            path_col="__selected_path_LCR",
+        )
         sub = _collapse_duplicate_keys(sub, [bank, month])
         sub = sub.sort_values(month)
 
@@ -2387,12 +2707,13 @@ def chart_selected_bank_mechanism(bank_monthly: Optional[pd.DataFrame]) -> None:
         fig, ax1 = plt.subplots(figsize=FIGSIZE_WIDE)
         setup_ax(ax1, f"Selected-bank Mechanism: {b}", "Stress month", "LCR")
 
+        threshold = get_active_lcr_threshold(bank_monthly=df)
         ax1.axhline(
-            1.0,
+            threshold,
             color=BURGUNDY,
             linestyle="--",
             linewidth=1.6,
-            label="LCR threshold = 1",
+            label=f"LCR threshold = {threshold:.1f}",
         )
 
         if pre_lcr and pre_lcr in sub.columns:
@@ -2417,7 +2738,7 @@ def chart_selected_bank_mechanism(bank_monthly: Optional[pd.DataFrame]) -> None:
 
         ax1.plot(
             sub[month],
-            sub[post_interbank],
+            sub["__selected_path_LCR"],
             marker="o",
             linewidth=3.0,
             color=BLUE,

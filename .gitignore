@@ -1,29 +1,125 @@
+# ============================================================
 # Python
+# ============================================================
 __pycache__/
 *.py[cod]
+*$py.class
+
+# ============================================================
+# Virtual environments
+# ============================================================
 .venv/
 venv/
-.env
+env/
+ENV/
 
-# OS / IDE
-.DS_Store
+# ============================================================
+# IDE / editor files
+# ============================================================
 .idea/
 .vscode/
+*.iml
 
-# Logs
+# ============================================================
+# OS files
+# ============================================================
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# Python / tool caches
+# ============================================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+.coverage.*
+htmlcov/
+
+# ============================================================
+# Logs / temporary files
+# ============================================================
 *.log
-
-# Temporary/editor files
 *.tmp
+*.temp
 *.bak
 *.save
 *~
+*.swp
+*.swo
 
-# Temporary backups
-old_outputs_backup/
-backups_before_fix/
+# ============================================================
+# Local / secret configuration
+# ============================================================
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ============================================================
+# Backup / obsolete local files
+# ============================================================
+*_backup.py
+old_outputs/
+backups_before*/
 fixed_tmp/
 
-# Generated caches
-.pytest_cache/
-.mypy_cache/
+# ============================================================
+# Repository audit artifacts
+# ============================================================
+docs/audits/
+
+# ============================================================
+# Confidential / supervisory data
+#
+# Synthetic files in data/input/ SHOULD remain tracked.
+# Any real supervisory data should be stored only in one of
+# the ignored directories below.
+# ============================================================
+data/private/
+data/confidential/
+data/internal/
+data/supervisory/
+data/real/
+
+# ============================================================
+# Generated charts
+#
+# Reporting charts are reproducible and therefore not tracked.
+# Final paper figures are stored separately in
+# outputs/paper_figures/ and ARE tracked.
+# ============================================================
+outputs/charts/
+
+# ============================================================
+# Generated tables
+#
+# Ignore generated intermediate tables by default.
+# Keep final paper-specific tables.
+# ============================================================
+outputs/tables/*
+
+!outputs/tables/paper_*.csv
+!outputs/tables/paper_*.tex
+
+# ============================================================
+# Large / temporary simulation outputs
+# ============================================================
+outputs/tmp/
+outputs/cache/
+outputs/monte_carlo/raw/
+results/monte_carlo/raw/
+
+# ============================================================
+# IMPORTANT: intentionally tracked
+#
+# Do NOT ignore:
+#   configs/
+#   data/input/
+#   outputs/architecture/
+#   outputs/paper_figures/
+#   outputs/tables/paper_*.csv
+#   outputs/tables/paper_*.tex
+# ============================================================
